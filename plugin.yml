@@ -1,0 +1,7 @@
+name: HeroicRebuke
+main: com.herocraftonline.squallseed31.heroicrebuke.HeroicRebuke
+version: 1.2.2.77
+commands:
+  warn:
+    description: Send a warning to misbehaving players that forces their acknowledgment.
+    usage: /warn help - Displays usage instructions
