@@ -36,7 +36,7 @@ public class HeroicRebukeMySQL extends HeroicRebukeDatasource
     		  Properties prop = new Properties();
     		  prop.setProperty("user", plugin.mySqlUser);
     		  prop.setProperty("password", plugin.mySqlPass);
-    		  conn = d.connect("jdbc:mysql://" + plugin.mySqlDir + "?zeroDateTimeBehavior=convertToNull", prop);
+    		  conn = d.connect("jdbc:mysql://" + plugin.mySqlDir + (plugin.mySqlDir.contains("?") ? "&" : "?") + "zeroDateTimeBehavior=convertToNull&autoReconnect=true", prop);
     	      conn.setAutoCommit(false);
     	      return conn;
     	  }
