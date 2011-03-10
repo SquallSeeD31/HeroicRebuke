@@ -243,7 +243,7 @@ public class HeroicRebuke extends JavaPlugin
 	    	if (useDB)
 	    		database.clearWarning(matchName);
 	    	
-	    	sender.sendMessage(messageColor + "Removed active warning from " + nameColor + warnings.get(matchName).getTarget());
+	    	sender.sendMessage(messageColor + "Removed active warning from " + nameColor + warnings.get(matchName.toLowerCase()).getTarget());
 	    	warnRemoval(matchName, senderName);
 
 	    	return true;
