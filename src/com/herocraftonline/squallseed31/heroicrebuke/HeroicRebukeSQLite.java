@@ -24,7 +24,6 @@ public class HeroicRebukeSQLite extends HeroicRebukeDatasource
     {
       Class.forName("org.sqlite.JDBC");
       Connection conn = DriverManager.getConnection("jdbc:sqlite:heroicRebuke.db");
-      conn.setAutoCommit(false);
       return conn;
     } catch (ClassNotFoundException e) {
       HeroicRebuke.log.severe("[HeroicRebuke] SQLite connector not found! Is 'sqlitejdbc-v056.jar' in /lib?");
@@ -37,6 +36,7 @@ public class HeroicRebukeSQLite extends HeroicRebukeDatasource
   public void initDB() {
 	try {
       Connection conn = getConnection();
+      conn.setAutoCommit(false);
       Statement stmt = conn.createStatement();
       stmt.executeUpdate("CREATE TABLE IF NOT EXISTS `warnings` (`id` INTEGER PRIMARY KEY,`to` VARCHAR(32) NOT NULL,`from` VARCHAR(32) NOT NULL,`message` VARCHAR(255) NOT NULL,`ack` BOOLEAN NOT NULL DEFAULT '0',`send_time` INTEGER NOT NULL DEFAULT CURRENT_TIMESTAMP,`ack_time` INTEGER,`code` VARCHAR(6))");
       stmt.executeUpdate("CREATE INDEX IF NOT EXISTS `warned` ON `warnings` (`to`)");
@@ -131,4 +131,21 @@ public class HeroicRebukeSQLite extends HeroicRebukeDatasource
 	  }
 	  return output;
   }
+
+	public int countWarnings(String player) {
+		  int result = -1;
+		  try {
+			  Connection conn = getConnection();
+			  PreparedStatement ps = conn.prepareStatement("SELECT count(`id`) FROM `warnings` WHERE `to` LIKE ?");
+			  ps.setString(1, player);
+			  ResultSet rs = ps.executeQuery();
+			  if (rs.next()) {
+				  result = rs.getInt(1);
+			  }
+			  conn.commit();
+		  } catch (SQLException e) {
+		      log.severe("[" + plugin.name + "] Warning count error: " + e);
+		  }
+		  return result;
+	}
 }

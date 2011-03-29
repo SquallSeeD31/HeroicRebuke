@@ -74,6 +74,8 @@ public abstract class HeroicRebukeDatasource
 		  }
 	  }
 	  
+	  public abstract int countWarnings(String player);
+	  
 	  public abstract void loadWarnings();
 	  
 	  public abstract Warning getWarning(int index);

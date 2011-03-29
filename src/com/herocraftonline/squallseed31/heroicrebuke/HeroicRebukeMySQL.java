@@ -172,4 +172,21 @@ public class HeroicRebukeMySQL extends HeroicRebukeDatasource
 	  }
 	  return output;
   }
+
+	public int countWarnings(String player) {
+		  int result = -1;
+		  try {
+			  Connection conn = getConnection();
+			  PreparedStatement ps = conn.prepareStatement("SELECT count(`id`) FROM `warnings` WHERE `to` LIKE ?");
+			  ps.setString(1, player);
+			  ResultSet rs = ps.executeQuery();
+			  if (rs.next()) {
+				  result = rs.getInt(1);
+			  }
+			  conn.commit();
+		  } catch (SQLException e) {
+		      log.severe("[" + plugin.name + "] Warning count error: " + e);
+		  }
+		  return result;
+	}
 }

@@ -19,6 +19,8 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.config.Configuration;
+import org.bukkit.craftbukkit.CraftServer;
+
 import com.nijikokun.bukkit.Permissions.Permissions;
 import com.nijiko.permissions.PermissionHandler;
 
@@ -55,6 +57,7 @@ public class HeroicRebuke extends JavaPlugin
 	public static boolean useDB;
 	public boolean useCode;
 	public boolean onlyWarnOnline;
+	public boolean canAcknowledge;
 	public String permissionSystem;
 	public List<String> rebukeAdmins;
 	public int maxPerPage;
@@ -62,6 +65,9 @@ public class HeroicRebuke extends JavaPlugin
 	public String mySqlDir;
 	public String mySqlUser;
 	public String mySqlPass;
+	public String dbType;
+	public boolean useBan;
+	public int banThreshold;
 	
 	//Set debugging true to see debug messages
 	public static final Boolean debugging = false;
@@ -91,6 +97,7 @@ public class HeroicRebuke extends JavaPlugin
 	    	rebukeAdmins = config.getStringList("admins", null);
 	    useCode = this.config.getBoolean("options.code.use", true);
 	    codeLength = this.config.getInt("options.code.length", 6);
+	    canAcknowledge = this.config.getBoolean("options.canAcknowledge", true);
 	    consoleSender = this.config.getString("options.server_name", "SERVER");
 	    blockMove = this.config.getBoolean("options.block_move", true);
 	    onlyWarnOnline = this.config.getBoolean("options.only_warn_online", true);
@@ -98,9 +105,11 @@ public class HeroicRebuke extends JavaPlugin
 	    mySqlDir = this.config.getString("options.mysql.location", "localhost:3306/HeroicRebuke");
 	    mySqlUser = this.config.getString("options.mysql.username", "root");
 	    mySqlPass = this.config.getString("options.mysql.password", "");
+	    useBan = this.config.getBoolean("options.ban.enable", false);
+	    banThreshold = this.config.getInt("options.ban.threshold", 5);
 	    //End config
 	    
-	    String dbType = this.config.getString("options.database", "sqlite");
+	    dbType = this.config.getString("options.database", "sqlite");
 	    if (dbType.equalsIgnoreCase("sqlite") || dbType.equalsIgnoreCase("true")) {
 	    	useDB = true;
 		    database = new HeroicRebukeSQLite(this);
@@ -118,6 +127,7 @@ public class HeroicRebuke extends JavaPlugin
 	    else
 	    	log.info("[" + name + "] No database enabled, warnings will not persist.");
 	    
+	    saveConfig();
 	    String strEnable = "[" + name + "] " + version + " enabled.";
 	    log.info(strEnable);
 	 }
@@ -185,6 +195,12 @@ public class HeroicRebuke extends JavaPlugin
 	    			p = pList.get(0);
 	    	}
 
+	    	int curWarnings = database.countWarnings(args[1]);
+	    	if (useBan && curWarnings+1>=banThreshold) {
+	    		((CraftServer)getServer()).getHandle().a(args[0]);
+	    		sender.sendMessage(nameColor + args[1] + messageColor + " has been banned for cumulative violations.");
+	    		return true;
+	    	}
 	    	if (p == null || !p.isOnline()) {
 	    		if (!onlyWarnOnline) {
 	    			w = makeWarning(args[1], senderName, message);
@@ -194,6 +210,7 @@ public class HeroicRebuke extends JavaPlugin
 	    		}
 	    		return true;
 	    	}
+	    	
     		w = makeWarning(p.getName(), senderName, message);
 			sendWarning(p, w);
 			listener.rootPlayer(p);
@@ -283,6 +300,10 @@ public class HeroicRebuke extends JavaPlugin
 	    
 	    //Acknowledge command
 	    if (args[0].equalsIgnoreCase("ack") || args[0].equalsIgnoreCase("acknowledge")) {
+	    	if (!canAcknowledge) {
+	    		sender.sendMessage(infoColor + "Error: " + messageColor + "You may not acknowledge this warning");
+	    		return true;
+	    	}
 	    	String code = null;
 	    	if (useCode) {
 	    		if (args.length < 2) {
@@ -542,11 +563,13 @@ public class HeroicRebuke extends JavaPlugin
     if (w == null)
       return;
     String warnHeader = messageColor + "[Warned by: " + nameColor + w.getSender() + messageColor + "] " + w.getMessage();
-    String warnFooter = "Type " + infoColor + "/warn acknowledge " + ((w.getCode() != null) ? w.getCode() : "") + messageColor + " to clear it.";
-    if (blockMove)
-    	warnFooter = messageColor + "Movement disabled; " + warnFooter;
     p.sendMessage(warnHeader);
-    p.sendMessage(warnFooter);
+    if (canAcknowledge) {
+	    String warnFooter = "Type " + infoColor + "/warn acknowledge " + ((w.getCode() != null) ? w.getCode() : "") + messageColor + " to clear it.";
+	    if (blockMove)
+	    	warnFooter = messageColor + "Movement disabled; " + warnFooter;
+	    p.sendMessage(warnFooter);
+    }
   }
 
   private void ackWarning(Player p, String code)
@@ -607,6 +630,17 @@ public class HeroicRebuke extends JavaPlugin
 	  }
 	  return returnColor.toString();
   }
+  
+  public String getColorName(String colorCode) {
+	  try {
+		  colorCode = colorCode.replace("\u00A7", "0x");
+		  Byte b = Byte.decode(colorCode);
+		  return ChatColor.getByCode(Integer.valueOf(b.intValue())).name();
+	  } catch (NumberFormatException e) {
+		  log.severe("[" + name + "] Unexpected error parsing color code: " + colorCode + ", using default of WHITE");
+		  return "WHITE";
+	  }
+  }
 	  
   //This method is the default API hook for Permissions
   public void setupPermissions() {
@@ -640,6 +674,29 @@ public class HeroicRebuke extends JavaPlugin
 		  }
 	  }
 	  return false;
+  }
+  
+  public void saveConfig() {
+	  this.config.setProperty("colors.message", getColorName(messageColor));
+	  this.config.setProperty("colors.name", getColorName(nameColor));
+	  this.config.setProperty("colors.info", getColorName(infoColor));
+	  this.config.setProperty("options.timeformat", timestampFormat);
+	  this.config.setProperty("options.permissions", permissionSystem);
+	  this.config.setProperty("admins", rebukeAdmins);
+	  this.config.setProperty("options.code.use", useCode);
+	  this.config.setProperty("options.code.length", codeLength);
+	  this.config.setProperty("options.canAcknowledge", canAcknowledge);
+	  this.config.setProperty("options.server_name", consoleSender);
+	  this.config.setProperty("options.block_move", blockMove);
+	  this.config.setProperty("options.only_warn_online", onlyWarnOnline);
+	  this.config.setProperty("options.lines_per_page", maxPerPage);
+	  this.config.setProperty("options.mysql.location", mySqlDir);
+	  this.config.setProperty("options.mysql.username", mySqlUser);
+	  this.config.setProperty("options.mysql.password", mySqlPass);
+	  this.config.setProperty("options.database", dbType);
+	  this.config.setProperty("options.ban.enable", useBan);
+	  this.config.setProperty("options.ban.threshold", banThreshold);
+	  this.config.save();
   }
   
   public static void debug(String message) {

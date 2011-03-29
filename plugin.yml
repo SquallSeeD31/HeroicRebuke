@@ -1,6 +1,6 @@
 name: HeroicRebuke
 main: com.herocraftonline.squallseed31.heroicrebuke.HeroicRebuke
-version: 1.2.4.80
+version: 0.2.5.81
 commands:
   warn:
     description: Send a warning to misbehaving players that forces their acknowledgment.
