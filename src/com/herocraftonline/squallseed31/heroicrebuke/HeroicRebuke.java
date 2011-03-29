@@ -68,6 +68,7 @@ public class HeroicRebuke extends JavaPlugin
 	public String dbType;
 	public boolean useBan;
 	public int banThreshold;
+	public String banMessage;
 	
 	//Set debugging true to see debug messages
 	public static final Boolean debugging = false;
@@ -107,6 +108,7 @@ public class HeroicRebuke extends JavaPlugin
 	    mySqlPass = this.config.getString("options.mysql.password", "");
 	    useBan = this.config.getBoolean("options.ban.enable", false);
 	    banThreshold = this.config.getInt("options.ban.threshold", 5);
+	    banMessage = this.config.getString("options.ban.message", "[HeroicRebuke] Banned for cumulative violations!");
 	    //End config
 	    
 	    dbType = this.config.getString("options.database", "sqlite");
@@ -180,6 +182,7 @@ public class HeroicRebuke extends JavaPlugin
 	        }
     	    message = result.toString();
     	    Player p = null;
+    	    String target = args[1];
     	    Warning w;
 	    	List <Player> pList = getServer().matchPlayer(args[1]);
 	    	if (!pList.isEmpty()) {
@@ -191,22 +194,26 @@ public class HeroicRebuke extends JavaPlugin
 	    				buildMessage += "please be more specific.";
 	    			sender.sendMessage(buildMessage);
 	    			return true;
-	    		} else
+	    		} else {
 	    			p = pList.get(0);
+	    			target = p.getName();
+	    		}
 	    	}
 
-	    	int curWarnings = database.countWarnings(args[1]);
+	    	int curWarnings = database.countWarnings(target);
 	    	if (useBan && curWarnings+1>=banThreshold) {
-	    		((CraftServer)getServer()).getHandle().a(args[0]);
-	    		sender.sendMessage(nameColor + args[1] + messageColor + " has been banned for cumulative violations.");
+	    		((CraftServer)getServer()).getHandle().a(target);
+	    		if (p != null && p.isOnline())
+	    			p.kickPlayer(banMessage);
+	    		sender.sendMessage(nameColor + target + messageColor + " has been banned for cumulative violations.");
 	    		return true;
 	    	}
 	    	if (p == null || !p.isOnline()) {
 	    		if (!onlyWarnOnline) {
-	    			w = makeWarning(args[1], senderName, message);
-	    			sender.sendMessage(nameColor + args[1] + messageColor + " is either offline or not a player, but has been warned.");
+	    			w = makeWarning(target, senderName, message);
+	    			sender.sendMessage(nameColor + target + messageColor + " is either offline or not a player, but has been warned.");
 	    		} else {
-	    			sender.sendMessage(infoColor + "Error: " + nameColor + args[1] + messageColor + " is either offline or not a player!");
+	    			sender.sendMessage(infoColor + "Error: " + nameColor + target + messageColor + " is either offline or not a player!");
 	    		}
 	    		return true;
 	    	}
@@ -696,6 +703,7 @@ public class HeroicRebuke extends JavaPlugin
 	  this.config.setProperty("options.database", dbType);
 	  this.config.setProperty("options.ban.enable", useBan);
 	  this.config.setProperty("options.ban.threshold", banThreshold);
+	  this.config.setProperty("options.ban.message", banMessage);
 	  this.config.save();
   }
   
