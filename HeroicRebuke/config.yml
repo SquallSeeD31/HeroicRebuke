@@ -1,0 +1,25 @@
+colors:
+    message: RED
+    name: DARK_AQUA
+    info: GOLD
+admins: null
+options:
+    lines_per_page: 5
+    server_name: SERVER
+    ban:
+        message: '[HeroicRebuke] Banned for cumulative violations!'
+        enable: false
+        threshold: 5
+    block_move: true
+    canAcknowledge: true
+    permissions: Permissions
+    only_warn_online: true
+    code:
+        length: 6
+        use: true
+    database: sqlite
+    timeformat: MM/dd/yyyy HH:mm:ss z
+    mysql:
+        username: root
+        location: localhost:3306/HeroicRebuke
+        password: ''
