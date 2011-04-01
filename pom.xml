@@ -3,7 +3,7 @@
   <groupId>com.herocraftonline.squallseed31.heroicrebuke</groupId>
   <artifactId>HeroicRebuke</artifactId>
   <name>HeroicRebuke</name>
-  <version>1.2.5</version>
+  <version>1.2.6</version>
   <build>
   	<plugins>
   		<plugin>
