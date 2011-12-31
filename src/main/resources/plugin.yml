@@ -6,3 +6,30 @@ commands:
   warn:
     description: Send a warning to misbehaving players that forces their acknowledgment.
     usage: /warn help - Displays usage instructions
+permissions:
+  heroicrebuke.add:
+    default: op
+    description: Allows adding warnings to a player
+  heroicrebuke.clear:
+    default: op
+    description: Clear active warning a player
+  heroicrebuke.active:
+    default: op
+    description: Show all unacknowledged warnings
+  heroicrebuke.info:
+    default: op
+    description: Display extended information about the given warning
+  heroicrebuke.list:
+    default: true
+    description: Allows listing own warnings
+  heroicrebuke.list.others:
+    default: op
+    description: Allows listing others' warnings
+  heroicrebuke.delete:
+    default: op
+    description: Permanently delete a warning
+commands:
+  warn:
+    description: Main command
+    usage: /warn help - shows help
+    aliases: [rebuke]
