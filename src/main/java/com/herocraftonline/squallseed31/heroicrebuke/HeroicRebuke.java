@@ -20,7 +20,6 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.config.Configuration;
 import org.bukkit.craftbukkit.CraftServer;
-
 import com.nijikokun.bukkit.Permissions.Permissions;
 import com.nijiko.permissions.PermissionHandler;
 
@@ -33,7 +32,7 @@ public class HeroicRebuke extends JavaPlugin
 
 	//Holder for incrementing index number when not using a database
 	public int noDatabaseIndex = 1;
-	
+
 	//Plugin variables
 	private final HeroicRebukeListener listener = new HeroicRebukeListener(this);
 	private HeroicRebukeDatasource database;
@@ -41,10 +40,10 @@ public class HeroicRebuke extends JavaPlugin
 	public String name;
 	public String version;
 	public File dataFolder;
-	
+
     public static final Logger log = Logger.getLogger("Minecraft");
 	public static PermissionHandler Permissions = null;
-	
+
 	//Configuration variables
 	public Configuration config;
 	public RandomString codeGen;
@@ -69,7 +68,7 @@ public class HeroicRebuke extends JavaPlugin
 	public boolean useBan;
 	public int banThreshold;
 	public String banMessage;
-	
+
 	//Set debugging true to see debug messages
 	public static final Boolean debugging = false;
 
@@ -110,7 +109,7 @@ public class HeroicRebuke extends JavaPlugin
 	    banThreshold = this.config.getInt("options.ban.threshold", 5);
 	    banMessage = this.config.getString("options.ban.message", "[HeroicRebuke] Banned for cumulative violations!");
 	    //End config
-	    
+
 	    dbType = this.config.getString("options.database", "sqlite");
 	    if (dbType.equalsIgnoreCase("sqlite") || dbType.equalsIgnoreCase("true")) {
 	    	useDB = true;
@@ -128,17 +127,17 @@ public class HeroicRebuke extends JavaPlugin
 	    	database.initDB();
 	    else
 	    	log.info("[" + name + "] No database enabled, warnings will not persist.");
-	    
+
 	    saveConfig();
 	    String strEnable = "[" + name + "] " + version + " enabled.";
 	    log.info(strEnable);
 	 }
-	  
+
 	  public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
 	    Player player = null;
 	    String senderName = null;
 	    Warning isWarned = null;
-	    
+
 	    //onCommand supports console sender, so we have to cast player
 	    if (sender instanceof Player) {
 		    player = (Player)sender;
@@ -147,7 +146,7 @@ public class HeroicRebuke extends JavaPlugin
 	    } else {
 	    	senderName = consoleSender;
 	    }
-	    
+
 	    //If someone is warned and they type /warn, show them their warning
 	    if (args.length < 1) {
 	    	if (isWarned != null) {
@@ -158,7 +157,7 @@ public class HeroicRebuke extends JavaPlugin
 	    }
 
 	    //Begin command handlers
-	    
+
 	    //Add Command
 	    if (args[0].equalsIgnoreCase("add")) {
 	    	if (!sender.isOp() && !hasPermission(player, "heroicrebuke.add"))
@@ -217,7 +216,7 @@ public class HeroicRebuke extends JavaPlugin
 	    		}
 	    		return true;
 	    	}
-	    	
+
     		w = makeWarning(p.getName(), senderName, message);
 			sendWarning(p, w);
 			listener.rootPlayer(p);
@@ -225,7 +224,7 @@ public class HeroicRebuke extends JavaPlugin
 
 	    	return true;
 	    }
-	    
+
 	    //Clear Command
 	    if (args[0].equalsIgnoreCase("clear")) {
 	    	if (!sender.isOp() && !hasPermission(player, "heroicrebuke.clear"))
@@ -266,13 +265,13 @@ public class HeroicRebuke extends JavaPlugin
 
 	    	if (useDB)
 	    		database.clearWarning(matchName);
-	    	
+
 	    	sender.sendMessage(messageColor + "Removed active warning from " + nameColor + warnings.get(matchName.toLowerCase()).getTarget());
 	    	warnRemoval(matchName, senderName);
 
 	    	return true;
 	    }
-	    
+
 	    //Delete command
 	    if (args[0].equalsIgnoreCase("del") || args[0].equalsIgnoreCase("delete")) {
 	    	if (!sender.isOp() && !hasPermission(player, "heroicrebuke.delete"))
@@ -295,7 +294,7 @@ public class HeroicRebuke extends JavaPlugin
 	    	Warning w = getFromId(index);
 	    	if (w != null)
 	    		warnRemoval(w.getTarget(), senderName);
-	    	
+
 	    	String result = database.delWarning(index);
 	    	if (result != null)
 	    		sender.sendMessage(messageColor + "Deleted warning with index [" + infoColor + index + messageColor + "] on player [" + nameColor + result + messageColor + "]");
@@ -303,8 +302,8 @@ public class HeroicRebuke extends JavaPlugin
 	    		sender.sendMessage(messageColor + "No warning found with index [" + infoColor + index + messageColor + "]");
 	    	return true;
 	    }
-	    
-	    
+
+
 	    //Acknowledge command
 	    if (args[0].equalsIgnoreCase("ack") || args[0].equalsIgnoreCase("acknowledge")) {
 	    	if (!canAcknowledge) {
@@ -325,7 +324,7 @@ public class HeroicRebuke extends JavaPlugin
 	    		sender.sendMessage("The server is above the law.");
 	    	return true;
 	    }
-	    
+
 	    //List command
 	    if (args[0].equalsIgnoreCase("list")) {
 	    	if (isWarned != null) {
@@ -346,7 +345,7 @@ public class HeroicRebuke extends JavaPlugin
 				    	target = senderName;
 			    	} catch (NumberFormatException e) {
 			    		target = args[1].trim();
-			    		if (args.length > 2) 
+			    		if (args.length > 2)
 			    			i=2;
 			    	}
 	    		}
@@ -371,7 +370,7 @@ public class HeroicRebuke extends JavaPlugin
 	    	sendWarningList(target, sender, senderName, page);
 	    	return true;
 	    }
-	    
+
 	    //Active command
 	    if (args[0].equalsIgnoreCase("active")) {
 	    	if (!sender.isOp() && !hasPermission(player, "heroicrebuke.active"))
@@ -389,7 +388,7 @@ public class HeroicRebuke extends JavaPlugin
 	    	sendActiveList(sender, senderName, page);
 	    	return true;
 	    }
-	    
+
 	    //Info command
 	    if (args[0].equalsIgnoreCase("info")) {
 	    	if (!sender.isOp() && !hasPermission(player, "heroicrebuke.info"))
@@ -457,7 +456,7 @@ public class HeroicRebuke extends JavaPlugin
 	    	}
 	    	return true;
 	    }
-	    
+
 	    //If no valid command is provided and player is warned, re-send warning
     	if (isWarned != null) {
     		sendWarning(player, isWarned);
@@ -513,14 +512,14 @@ public class HeroicRebuke extends JavaPlugin
 			  sender.sendMessage(msg);
 	  }
   }
-  
+
   public void sendActiveList(CommandSender sender, String senderName, int page) {
 	  ArrayList<String> curList = lists.get(senderName.toLowerCase());
 	  if (curList == null) {
 		  curList = new ArrayList<String>();
 		  for (Warning w : warnings.values()) {
 			  String send_time = getFormatTime(w.getSendTime());
-			  String buildLine = messageColor + "[" + infoColor + w.getId() + messageColor + "] " + infoColor + send_time + messageColor + " From: " + nameColor + w.getSender() + messageColor + 
+			  String buildLine = messageColor + "[" + infoColor + w.getId() + messageColor + "] " + infoColor + send_time + messageColor + " From: " + nameColor + w.getSender() + messageColor +
 			  			   " To: " + nameColor + w.getTarget();
 			  curList.add(buildLine);
 		  }
@@ -552,7 +551,7 @@ public class HeroicRebuke extends JavaPlugin
 			  sender.sendMessage(msg);
 	  }
   }
-  
+
   public Warning makeWarning(String to, String from, String message) {
   	Warning w = new Warning(to, from, message);
 	if (useCode)
@@ -564,7 +563,7 @@ public class HeroicRebuke extends JavaPlugin
 	warnings.put(to.toLowerCase(), w);
 	return w;
   }
-  
+
   public void sendWarning(Player p, Warning w)
   {
     if (w == null)
@@ -607,7 +606,7 @@ public class HeroicRebuke extends JavaPlugin
     if (useDB)
     	database.ackWarning(p.getName());
   }
-  
+
     //Method returns a formatted timestamp, defaults if format/time are unusable
 	public String getFormatTime(Long time) {
 		if (time == null)
@@ -624,7 +623,7 @@ public class HeroicRebuke extends JavaPlugin
 			return format.format(timestamp);
 		}
 	}
-	
+
   //Method validates color constants defined in a config.yml
   public String getConfigColor(String property, String def) {
 	  String propColor = this.config.getString(property, def);
@@ -637,7 +636,7 @@ public class HeroicRebuke extends JavaPlugin
 	  }
 	  return returnColor.toString();
   }
-  
+
   public String getColorName(String colorCode) {
 	  try {
 		  colorCode = colorCode.replace("\u00A7", "0x");
@@ -648,7 +647,7 @@ public class HeroicRebuke extends JavaPlugin
 		  return "WHITE";
 	  }
   }
-	  
+
   //This method is the default API hook for Permissions
   public void setupPermissions() {
 		Plugin test = this.getServer().getPluginManager().getPlugin("Permissions");
@@ -682,7 +681,7 @@ public class HeroicRebuke extends JavaPlugin
 	  }
 	  return false;
   }
-  
+
   public void saveConfig() {
 	  this.config.setProperty("colors.message", getColorName(messageColor));
 	  this.config.setProperty("colors.name", getColorName(nameColor));
@@ -706,13 +705,13 @@ public class HeroicRebuke extends JavaPlugin
 	  this.config.setProperty("options.ban.message", banMessage);
 	  this.config.save();
   }
-  
+
   public static void debug(String message) {
 	  if (debugging) {
 		  log.info(message);
 	  }
   }
-  
+
   public void onDisable()
   {
 	  if (useDB) {
