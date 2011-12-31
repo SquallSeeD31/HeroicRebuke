@@ -1,6 +1,8 @@
 package com.herocraftonline.squallseed31.heroicrebuke;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -8,18 +10,17 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.util.config.Configuration;
-import org.bukkit.craftbukkit.CraftServer;
 
 public class HeroicRebuke extends JavaPlugin {
     //Data!
@@ -37,7 +38,9 @@ public class HeroicRebuke extends JavaPlugin {
     public File dataFolder;
     public static final Logger log = Logger.getLogger("Minecraft");
     //Configuration variables
-    public Configuration config;
+    //public Configuration config;
+    private static String maindir = "plugins/HeroicRebuke/";
+    private final File configfile = new File(maindir + "config.yml");
     public RandomString codeGen;
     public String timestampFormat;
     public String consoleSender = "SERVER";
@@ -64,7 +67,27 @@ public class HeroicRebuke extends JavaPlugin {
     public static final Boolean debugging = false;
 
     public void onEnable() {
-        this.config = getConfiguration();
+        //this.config = getConfiguration();
+        // Load config
+        new File(maindir).mkdir();
+        if (!configfile.exists()) {
+            try {
+                configfile.createNewFile();
+            } catch (IOException ex) {
+                Logger.getLogger(HeroicRebuke.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        try {
+            this.getConfig().load(configfile);
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(HeroicRebuke.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(HeroicRebuke.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (InvalidConfigurationException ex) {
+            Logger.getLogger(HeroicRebuke.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+
         this.blockMove = true;
         warnings = new HashMap<String, Warning>();
         lists = new HashMap<String, ArrayList<String>>();
@@ -81,27 +104,29 @@ public class HeroicRebuke extends JavaPlugin {
         messageColor = getConfigColor("colors.message", "RED");
         nameColor = getConfigColor("colors.name", "DARK_AQUA");
         infoColor = getConfigColor("colors.info", "GOLD");
-        timestampFormat = this.config.getString("options.timeformat", "MM/dd/yyyy HH:mm:ss z");
-        permissionSystem = this.config.getString("options.permissions", "Permissions");
-        if (permissionSystem.equalsIgnoreCase("config")) {
-            rebukeAdmins = config.getStringList("admins", null);
-        }
-        useCode = this.config.getBoolean("options.code.use", true);
-        codeLength = this.config.getInt("options.code.length", 6);
-        canAcknowledge = this.config.getBoolean("options.canAcknowledge", true);
-        consoleSender = this.config.getString("options.server_name", "SERVER");
-        blockMove = this.config.getBoolean("options.block_move", true);
-        onlyWarnOnline = this.config.getBoolean("options.only_warn_online", true);
-        maxPerPage = this.config.getInt("options.lines_per_page", 5);
-        mySqlDir = this.config.getString("options.mysql.location", "localhost:3306/HeroicRebuke");
-        mySqlUser = this.config.getString("options.mysql.username", "root");
-        mySqlPass = this.config.getString("options.mysql.password", "");
-        useBan = this.config.getBoolean("options.ban.enable", false);
-        banThreshold = this.config.getInt("options.ban.threshold", 5);
-        banMessage = this.config.getString("options.ban.message", "[HeroicRebuke] Banned for cumulative violations!");
+        timestampFormat = this.getConfig().getString("options.timeformat", "MM/dd/yyyy HH:mm:ss z");
+        permissionSystem = this.getConfig().getString("options.permissions", "Permissions");
+// Doesn't work with new config system
+//        if (permissionSystem.equalsIgnoreCase("config")) {
+//            rebukeAdmins = this.getConfig().getStringList("admins", null);
+//        }
+        useCode = this.getConfig().getBoolean("options.code.use", true);
+        useCode = this.getConfig().getBoolean("options.code.use", true);
+        codeLength = this.getConfig().getInt("options.code.length", 6);
+        canAcknowledge = this.getConfig().getBoolean("options.canAcknowledge", true);
+        consoleSender = this.getConfig().getString("options.server_name", "SERVER");
+        blockMove = this.getConfig().getBoolean("options.block_move", true);
+        onlyWarnOnline = this.getConfig().getBoolean("options.only_warn_online", true);
+        maxPerPage = this.getConfig().getInt("options.lines_per_page", 5);
+        mySqlDir = this.getConfig().getString("options.mysql.location", "localhost:3306/HeroicRebuke");
+        mySqlUser = this.getConfig().getString("options.mysql.username", "root");
+        mySqlPass = this.getConfig().getString("options.mysql.password", "");
+        useBan = this.getConfig().getBoolean("options.ban.enable", false);
+        banThreshold = this.getConfig().getInt("options.ban.threshold", 5);
+        banMessage = this.getConfig().getString("options.ban.message", "[HeroicRebuke] Banned for cumulative violations!");
         //End config
 
-        dbType = this.config.getString("options.database", "sqlite");
+        dbType = this.getConfig().getString("options.database", "sqlite");
         if (dbType.equalsIgnoreCase("sqlite") || dbType.equalsIgnoreCase("true")) {
             useDB = true;
             database = new HeroicRebukeSQLite(this);
@@ -197,7 +222,8 @@ public class HeroicRebuke extends JavaPlugin {
 
             int curWarnings = database.countWarnings(target);
             if (useBan && curWarnings + 1 >= banThreshold) {
-                ((CraftServer) getServer()).getHandle().a(target);
+                //getServer().getHandle().a(target);
+
                 if (p != null && p.isOnline()) {
                     p.kickPlayer(banMessage);
                 }
@@ -661,7 +687,7 @@ public class HeroicRebuke extends JavaPlugin {
 
     //Method validates color constants defined in a config.yml
     public String getConfigColor(String property, String def) {
-        String propColor = this.config.getString(property, def);
+        String propColor = this.getConfig().getString(property, def);
         ChatColor returnColor = null;
         try {
             returnColor = ChatColor.valueOf(propColor);
@@ -685,15 +711,8 @@ public class HeroicRebuke extends JavaPlugin {
 
     //This method is the default API hook for Permissions
     public void setupPermissions() {
-        Plugin test = this.getServer().getPluginManager().getPlugin("Permissions");
-        if (Permissions == null) {
-            if (test != null) {
-                Permissions = ((Permissions) test).getHandler();
-            } else {
-                log.info("[" + this.name + "]" + " Permission system not enabled. Defaulting to ops only.");
-                permissionSystem = "Ops";
-            }
-        }
+        log.info("[" + this.name + "]" + " Permission system possibly not present.");
+        //permissionSystem = "Ops";
     }
 
     //Permissions system check
@@ -703,7 +722,7 @@ public class HeroicRebuke extends JavaPlugin {
             return true;
         }
         //If using Nijikokun's Permissions, do a Permissions check
-        if (permissionSystem.equalsIgnoreCase("permissions") && Permissions.has(p, permission)) {
+        if (p.hasPermission(permission)) {
             return true;
         }
         //If using config.yml admins definition, iterate over the list (for case insensitivity)
@@ -721,27 +740,30 @@ public class HeroicRebuke extends JavaPlugin {
     }
 
     public void saveConfig() {
-        this.config.setProperty("colors.message", getColorName(messageColor));
-        this.config.setProperty("colors.name", getColorName(nameColor));
-        this.config.setProperty("colors.info", getColorName(infoColor));
-        this.config.setProperty("options.timeformat", timestampFormat);
-        this.config.setProperty("options.permissions", permissionSystem);
-        this.config.setProperty("admins", rebukeAdmins);
-        this.config.setProperty("options.code.use", useCode);
-        this.config.setProperty("options.code.length", codeLength);
-        this.config.setProperty("options.canAcknowledge", canAcknowledge);
-        this.config.setProperty("options.server_name", consoleSender);
-        this.config.setProperty("options.block_move", blockMove);
-        this.config.setProperty("options.only_warn_online", onlyWarnOnline);
-        this.config.setProperty("options.lines_per_page", maxPerPage);
-        this.config.setProperty("options.mysql.location", mySqlDir);
-        this.config.setProperty("options.mysql.username", mySqlUser);
-        this.config.setProperty("options.mysql.password", mySqlPass);
-        this.config.setProperty("options.database", dbType);
-        this.config.setProperty("options.ban.enable", useBan);
-        this.config.setProperty("options.ban.threshold", banThreshold);
-        this.config.setProperty("options.ban.message", banMessage);
-        this.config.save();
+        this.getConfig().set("colors.message", getColorName(messageColor));
+        this.getConfig().set("colors.name", getColorName(nameColor));
+        this.getConfig().set("colors.info", getColorName(infoColor));
+        this.getConfig().set("options.timeformat", timestampFormat);
+        this.getConfig().set("admins", rebukeAdmins);
+        this.getConfig().set("options.code.use", useCode);
+        this.getConfig().set("options.code.length", codeLength);
+        this.getConfig().set("options.canAcknowledge", canAcknowledge);
+        this.getConfig().set("options.server_name", consoleSender);
+        this.getConfig().set("options.block_move", blockMove);
+        this.getConfig().set("options.only_warn_online", onlyWarnOnline);
+        this.getConfig().set("options.lines_per_page", maxPerPage);
+        this.getConfig().set("options.mysql.location", mySqlDir);
+        this.getConfig().set("options.mysql.username", mySqlUser);
+        this.getConfig().set("options.mysql.password", mySqlPass);
+        this.getConfig().set("options.database", dbType);
+        this.getConfig().set("options.ban.enable", useBan);
+        this.getConfig().set("options.ban.threshold", banThreshold);
+        this.getConfig().set("options.ban.message", banMessage);
+        try {
+            this.getConfig().save(configfile);
+        } catch (IOException ex) {
+            Logger.getLogger(HeroicRebuke.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     public static void debug(String message) {
