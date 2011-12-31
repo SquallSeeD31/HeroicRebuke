@@ -343,7 +343,7 @@ public class HeroicRebuke extends JavaPlugin {
             String code = null;
             if (useCode) {
                 if (args.length < 2) {
-                    sender.sendMessage(messageColor + "Usage: " + infoColor + "/warn acknowledge <code>");
+                    sender.sendMessage(messageColor + "Usage: " + infoColor + "/warn ack <code>");
                     return true;
                 }
                 code = args[1].trim();
@@ -477,25 +477,25 @@ public class HeroicRebuke extends JavaPlugin {
         if (args[0].equalsIgnoreCase("help")) {
             sender.sendMessage(infoColor + "===HeroicRebuke Commands===");
             if (!sender.isOp()) {
-                sender.sendMessage(infoColor + "/warn acknowledge " + (useCode ? "(code) " : " ") + messageColor + "- Clears your active warning" + (useCode ? ". Requires " + infoColor + "(code)" + messageColor + " from the warning" : ""));
+                sender.sendMessage(infoColor + "/warn ack " + (useCode ? "(code) " : " ") + messageColor + "- Clears your active warning" + (useCode ? ". Requires " + infoColor + "(code)" + messageColor + " from the warning" : ""));
             }
-            if (hasPermission(player, "heroicrebuke.add")) {
+            if (sender.hasPermission("heroicrebuke.add")) {
                 sender.sendMessage(infoColor + "/warn add <name> <reason>" + messageColor + " - Warn " + infoColor + "<name> " + messageColor + "for " + infoColor + "<reason>");
             }
-            if (hasPermission(player, "heroicrebuke.clear")) {
+            if (sender.hasPermission("heroicrebuke.clear")) {
                 sender.sendMessage(infoColor + "/warn clear <name>" + messageColor + " - Clear active warning of " + infoColor + "<name>");
             }
-            if (hasPermission(player, "heroicrebuke.active")) {
+            if (sender.hasPermission("heroicrebuke.active")) {
                 sender.sendMessage(infoColor + "/warn active (page)" + messageColor + " - Show all unacknowledged warnings");
             }
-            if (hasPermission(player, "heroicrebuke.info")) {
+            if (sender.hasPermission("heroicrebuke.info")) {
                 sender.sendMessage(infoColor + "/warn info <index>" + messageColor + " - Display extended information about the given warning");
             }
             if (useDB) {
-                if (hasPermission(player, "heroicrebuke.list")) {
-                    sender.sendMessage(infoColor + "/warn list " + ((hasPermission(player, "heroicrebuke.list.others")) ? "<name> (page)" : " (page)") + messageColor + " - List previous warnings" + ((hasPermission(player, "heroicrebuke.list.others")) ? " for " + infoColor + "<name>" : ""));
+                if (sender.hasPermission("heroicrebuke.list")) {
+                    sender.sendMessage(infoColor + "/warn list " + ((sender.hasPermission("heroicrebuke.list.others")) ? "<name> (page)" : " (page)") + messageColor + " - List previous warnings" + ((sender.hasPermission("heroicrebuke.list.others")) ? " for " + infoColor + "<name>" : ""));
                 }
-                if (hasPermission(player, "heroicrebuke.delete")) {
+                if (sender.hasPermission("heroicrebuke.delete")) {
                     sender.sendMessage(infoColor + "/warn delete <index>" + messageColor + " - Permanently delete a warning; requires index number displayed by " + infoColor + "list" + messageColor + " or " + infoColor + "active");
                 }
             }
@@ -631,7 +631,7 @@ public class HeroicRebuke extends JavaPlugin {
         String warnHeader = messageColor + "[Warned by: " + nameColor + w.getSender() + messageColor + "] " + w.getMessage();
         p.sendMessage(warnHeader);
         if (canAcknowledge) {
-            String warnFooter = "Type " + infoColor + "/warn acknowledge " + ((w.getCode() != null) ? w.getCode() : "") + messageColor + " to clear it.";
+            String warnFooter = "Type " + infoColor + "/warn ack " + ((w.getCode() != null) ? w.getCode() : "") + messageColor + " to clear it.";
             if (blockMove) {
                 warnFooter = messageColor + "Movement disabled; " + warnFooter;
             }
