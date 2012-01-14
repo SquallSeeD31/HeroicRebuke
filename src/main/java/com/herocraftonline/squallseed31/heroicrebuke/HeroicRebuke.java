@@ -99,6 +99,7 @@ public class HeroicRebuke extends JavaPlugin {
         pm.registerEvent(Event.Type.PLAYER_TELEPORT, this.listener, Event.Priority.Highest, this);
         pm.registerEvent(Event.Type.PLAYER_MOVE, this.listener, Event.Priority.Highest, this);
         pm.registerEvent(Event.Type.PLAYER_JOIN, this.listener, Event.Priority.Monitor, this);
+        pm.registerEvent(Event.Type.PLAYER_INTERACT, this.listener, Event.Priority.Highest, this);
 
         //Start config
         messageColor = getConfigColor("colors.message", "RED");
@@ -222,6 +223,7 @@ public class HeroicRebuke extends JavaPlugin {
 
             int curWarnings = database.countWarnings(target);
             if (useBan && curWarnings + 1 >= banThreshold) {
+                // wtf does this line do? doesn't compile on 1597.
                 //getServer().getHandle().a(target);
 
                 if (p != null && p.isOnline()) {

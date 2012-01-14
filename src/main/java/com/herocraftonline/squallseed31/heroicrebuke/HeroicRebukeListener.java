@@ -1,6 +1,7 @@
 package com.herocraftonline.squallseed31.heroicrebuke;
 
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerListener;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -12,6 +13,7 @@ public class HeroicRebukeListener extends PlayerListener {
 
     private final HeroicRebuke plugin;
     public static HashMap<Player, Location> rootLocations = new HashMap<Player, Location>();
+    private static HashMap<Player, Long> nextinform = new HashMap<Player, Long>();
 
     public HeroicRebukeListener(HeroicRebuke instance) {
         plugin = instance;
@@ -21,19 +23,20 @@ public class HeroicRebukeListener extends PlayerListener {
         rootLocations.put(p, p.getLocation());
     }
 
+    @Override
     public void onPlayerMove(PlayerMoveEvent event) {
         if (plugin.blockMove) {
             if (rootLocations.containsKey(event.getPlayer())) {
                 Location from = rootLocations.get(event.getPlayer());
                 if (event.getTo() != from) {
-                    event.setCancelled(true);
-                    event.getPlayer().teleport(from);
-                    event.getPlayer().sendMessage("Movement disabled: say /warn list");
+                    event.setTo(from);
+                    warnMove(event.getPlayer());
                 }
             }
         }
     }
 
+    @Override
     public void onPlayerTeleport(PlayerTeleportEvent event) {
         if (plugin.blockMove) {
             if (rootLocations.containsKey(event.getPlayer())) {
@@ -43,14 +46,14 @@ public class HeroicRebukeListener extends PlayerListener {
                 double deltaZ = Math.abs(from.getZ() - event.getTo().getZ());
                 if (deltaX > 1.5 || deltaY > 1.5 || deltaZ > 1.5) {
                     HeroicRebuke.debug("From: " + from.toString() + " To: " + event.getTo().toString());
-                    event.getPlayer().teleport(from);
-                    event.setCancelled(true);
-                    event.getPlayer().sendMessage("Movement disabled: say /warn list");
+                    event.setTo(from);
+                    warnMove(event.getPlayer());
                 }
             }
         }
     }
 
+    @Override
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player p = event.getPlayer();
         if (HeroicRebuke.warnings.containsKey(p.getName().toLowerCase())) {
@@ -59,5 +62,27 @@ public class HeroicRebukeListener extends PlayerListener {
             }
             plugin.sendWarning(p, HeroicRebuke.warnings.get(p.getName().toLowerCase()));
         }
+    }
+
+    @Override
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        if (plugin.blockMove) {
+            if (rootLocations.containsKey(event.getPlayer())) {
+                event.setCancelled(true);
+                warnMove(event.getPlayer());
+            }
+        }
+    }
+
+    private void warnMove(Player player) {
+        if (nextinform.containsKey(player)) {
+            if (System.currentTimeMillis() < nextinform.get(player) * 1000) { // not yet
+                return;
+            } else { // need to notify
+                nextinform.remove(player);
+            }
+        }
+        nextinform.put(player, (System.currentTimeMillis() / 1000) + 15);
+        player.sendMessage("Movement disabled! Say /warn list");
     }
 }
