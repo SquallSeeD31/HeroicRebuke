@@ -1,15 +1,17 @@
 package com.herocraftonline.squallseed31.heroicrebuke;
 
-import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerListener;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.Location;
 import java.util.HashMap;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
 
-public class HeroicRebukeListener extends PlayerListener {
+public class HeroicRebukeListener implements Listener {
 
     private final HeroicRebuke plugin;
     public static HashMap<Player, Location> rootLocations = new HashMap<Player, Location>();
@@ -23,7 +25,7 @@ public class HeroicRebukeListener extends PlayerListener {
         rootLocations.put(p, p.getLocation());
     }
 
-    @Override
+    @EventHandler(priority = EventPriority.LOW)
     public void onPlayerMove(PlayerMoveEvent event) {
         if (plugin.blockMove) {
             if (rootLocations.containsKey(event.getPlayer())) {
@@ -36,7 +38,7 @@ public class HeroicRebukeListener extends PlayerListener {
         }
     }
 
-    @Override
+    @EventHandler(priority = EventPriority.LOW)
     public void onPlayerTeleport(PlayerTeleportEvent event) {
         if (plugin.blockMove) {
             if (rootLocations.containsKey(event.getPlayer())) {
@@ -53,7 +55,7 @@ public class HeroicRebukeListener extends PlayerListener {
         }
     }
 
-    @Override
+    @EventHandler(priority = EventPriority.LOW)
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player p = event.getPlayer();
         if (HeroicRebuke.warnings.containsKey(p.getName().toLowerCase())) {
@@ -64,7 +66,7 @@ public class HeroicRebukeListener extends PlayerListener {
         }
     }
 
-    @Override
+    @EventHandler(priority = EventPriority.LOW)
     public void onPlayerInteract(PlayerInteractEvent event) {
         if (plugin.blockMove) {
             if (rootLocations.containsKey(event.getPlayer())) {

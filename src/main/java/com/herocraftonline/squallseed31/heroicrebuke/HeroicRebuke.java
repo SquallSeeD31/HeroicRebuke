@@ -5,11 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.bukkit.ChatColor;
@@ -17,7 +13,6 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -66,6 +61,7 @@ public class HeroicRebuke extends JavaPlugin {
     //Set debugging true to see debug messages
     public static final Boolean debugging = false;
 
+    @Override
     public void onEnable() {
         //this.config = getConfiguration();
         // Load config
@@ -96,10 +92,7 @@ public class HeroicRebuke extends JavaPlugin {
         version = pdfFile.getVersion();
         dataFolder = getDataFolder();
         PluginManager pm = getServer().getPluginManager();
-        pm.registerEvent(Event.Type.PLAYER_TELEPORT, this.listener, Event.Priority.Highest, this);
-        pm.registerEvent(Event.Type.PLAYER_MOVE, this.listener, Event.Priority.Highest, this);
-        pm.registerEvent(Event.Type.PLAYER_JOIN, this.listener, Event.Priority.Monitor, this);
-        pm.registerEvent(Event.Type.PLAYER_INTERACT, this.listener, Event.Priority.Highest, this);
+        pm.registerEvents(this.listener, this);
 
         //Start config
         messageColor = getConfigColor("colors.message", "RED");
@@ -107,10 +100,6 @@ public class HeroicRebuke extends JavaPlugin {
         infoColor = getConfigColor("colors.info", "GOLD");
         timestampFormat = this.getConfig().getString("options.timeformat", "MM/dd/yyyy HH:mm:ss z");
         permissionSystem = this.getConfig().getString("options.permissions", "Permissions");
-// Doesn't work with new config system
-//        if (permissionSystem.equalsIgnoreCase("config")) {
-//            rebukeAdmins = this.getConfig().getStringList("admins", null);
-//        }
         useCode = this.getConfig().getBoolean("options.code.use", true);
         useCode = this.getConfig().getBoolean("options.code.use", true);
         codeLength = this.getConfig().getInt("options.code.length", 6);
@@ -139,13 +128,10 @@ public class HeroicRebuke extends JavaPlugin {
         }
 
         codeGen = new RandomString(codeLength);
-        if (permissionSystem.equalsIgnoreCase("permissions")) {
-            setupPermissions();
-        }
         if (useDB) {
             database.initDB();
         } else {
-            log.info("[" + name + "] No database enabled, warnings will not persist.");
+            log.log(Level.INFO, "[{0}] No database enabled, warnings will not persist.", name);
         }
 
         saveConfig();
@@ -153,9 +139,10 @@ public class HeroicRebuke extends JavaPlugin {
         log.info(strEnable);
     }
 
+    @Override
     public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
         Player player = null;
-        String senderName = null;
+        String senderName;
         Warning isWarned = null;
 
         //onCommand supports console sender, so we have to cast player
@@ -191,7 +178,6 @@ public class HeroicRebuke extends JavaPlugin {
                 sender.sendMessage(nameColor + args[1] + messageColor + " is already being warned by " + nameColor + warnings.get(args[1].toLowerCase()).getSender() + messageColor + ".");
                 return true;
             }
-            String message = null;
             StringBuffer result = new StringBuffer();
             result.append(args[2]);
             if (args.length > 3) {
@@ -200,7 +186,7 @@ public class HeroicRebuke extends JavaPlugin {
                     result.append(args[i]);
                 }
             }
-            message = result.toString();
+            String message = result.toString();
             Player p = null;
             String target = args[1];
             Warning w;
@@ -223,18 +209,18 @@ public class HeroicRebuke extends JavaPlugin {
 
             int curWarnings = database.countWarnings(target);
             if (useBan && curWarnings + 1 >= banThreshold) {
-                // wtf does this line do? doesn't compile on 1597.
-                //getServer().getHandle().a(target);
-
-                if (p != null && p.isOnline()) {
-                    p.kickPlayer(banMessage);
+                if (p != null) {
+                    p.setBanned(true);
+                    if (p.isOnline()) {
+                        p.kickPlayer(banMessage);
+                    }
                 }
                 sender.sendMessage(nameColor + target + messageColor + " has been banned for cumulative violations.");
                 return true;
             }
             if (p == null || !p.isOnline()) {
                 if (!onlyWarnOnline) {
-                    w = makeWarning(target, senderName, message);
+                    makeWarning(target, senderName, message);
                     sender.sendMessage(nameColor + target + messageColor + " is either offline or not a player, but has been warned.");
                 } else {
                     sender.sendMessage(infoColor + "Error: " + nameColor + target + messageColor + " is either offline or not a player!");
@@ -314,7 +300,7 @@ public class HeroicRebuke extends JavaPlugin {
                 sender.sendMessage(messageColor + "The delete command is only available when using a database.");
                 return true;
             }
-            int index = -1;
+            int index;
             try {
                 index = Integer.parseInt(args[1].trim());
             } catch (NumberFormatException e) {
@@ -644,7 +630,7 @@ public class HeroicRebuke extends JavaPlugin {
     private void ackWarning(Player p, String code) {
         Warning w = warnings.get(p.getName().toLowerCase());
         if (w == null) {
-            p.sendMessage(messageColor + "You are not being warned for anything.");
+            p.sendMessage(messageColor + "You are not currently warned.");
             return;
         }
         if ((useCode && (w.getCode() != null)) && !w.getCode().equalsIgnoreCase(code)) {
@@ -652,8 +638,8 @@ public class HeroicRebuke extends JavaPlugin {
             return;
         }
         p.sendMessage(messageColor + "You have acknowledged your warning.");
-        String message = nameColor + p.getName() + messageColor + " acknowledged your warning.";
-        if (w.getSender() != consoleSender) {
+        String message = nameColor + p.getName() + messageColor + " acknowledged your warning."; // TODO: broadcast to all with hr.notify perm
+        if (!w.getSender().equals(consoleSender)) {
             try {
                 Player sender = getServer().getPlayer(w.getSender());
                 sender.sendMessage(message);
@@ -680,7 +666,6 @@ public class HeroicRebuke extends JavaPlugin {
             return format.format(timestamp);
         } catch (IllegalArgumentException e) {
             log.severe("[HeroicRebuke] Couldn't use provided timestamp format, using default.");
-            e.printStackTrace();
             timestampFormat = "MM/dd/yyyy HH:mm:ss z";
             SimpleDateFormat format = new SimpleDateFormat(timestampFormat);
             return format.format(timestamp);
@@ -690,11 +675,11 @@ public class HeroicRebuke extends JavaPlugin {
     //Method validates color constants defined in a config.yml
     public String getConfigColor(String property, String def) {
         String propColor = this.getConfig().getString(property, def);
-        ChatColor returnColor = null;
+        ChatColor returnColor;
         try {
             returnColor = ChatColor.valueOf(propColor);
         } catch (Exception e) {
-            log.info("[" + name + "] Improper color definition in config.yml, using default.");
+            log.log(Level.INFO, "[{0}] Improper color definition in config.yml, using default.", name);
             returnColor = ChatColor.valueOf(def);
         }
         return returnColor.toString();
@@ -704,43 +689,20 @@ public class HeroicRebuke extends JavaPlugin {
         try {
             colorCode = colorCode.replace("\u00A7", "0x");
             Byte b = Byte.decode(colorCode);
-            return ChatColor.getByCode(Integer.valueOf(b.intValue())).name();
+            return "WHITE"; // TODO FIXME
+            //return ChatColor.getByCode(Integer.valueOf(b.intValue())).name();
         } catch (NumberFormatException e) {
-            log.severe("[" + name + "] Unexpected error parsing color code: " + colorCode + ", using default of WHITE");
+            log.log(Level.SEVERE, "[{0}] Unexpected error parsing color code: {1}, using default of WHITE", new Object[]{name, colorCode});
             return "WHITE";
         }
     }
 
-    //This method is the default API hook for Permissions
-    public void setupPermissions() {
-        log.info("[" + this.name + "]" + " Permission system possibly not present.");
-        //permissionSystem = "Ops";
-    }
-
-    //Permissions system check
     public boolean hasPermission(Player p, String permission) {
-        //Ops always win
-        if (p.isOp()) {
-            return true;
-        }
-        //If using Nijikokun's Permissions, do a Permissions check
-        if (p.hasPermission(permission)) {
-            return true;
-        }
-        //If using config.yml admins definition, iterate over the list (for case insensitivity)
-        if (permissionSystem.equalsIgnoreCase("config")) {
-            if (rebukeAdmins != null) {
-                Iterator<String> it = rebukeAdmins.iterator();
-                while (it.hasNext()) {
-                    if (it.next().equalsIgnoreCase(p.getName())) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
+        log.log(Level.SEVERE, "[{0}] FIXME: Old permissions check used!", name);
+        return p.hasPermission(permission);
     }
 
+    @Override
     public void saveConfig() {
         this.getConfig().set("colors.message", getColorName(messageColor));
         this.getConfig().set("colors.name", getColorName(nameColor));
@@ -774,12 +736,13 @@ public class HeroicRebuke extends JavaPlugin {
         }
     }
 
+    @Override
     public void onDisable() {
         if (useDB) {
             try {
                 database.getConnection().close();
             } catch (SQLException e) {
-                log.severe("[" + name + "] Error closing database: ");
+                log.log(Level.SEVERE, "[{0}] Error closing database: ", name);
                 e.printStackTrace();
             }
         }
