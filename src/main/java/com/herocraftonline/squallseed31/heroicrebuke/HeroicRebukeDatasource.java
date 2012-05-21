@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -46,7 +47,7 @@ public abstract class HeroicRebukeDatasource {
             }
             conn.commit();
         } catch (SQLException e) {
-            log.log(Level.SEVERE, "[HeroicRebuke] Warning deletion error: {0}", e);
+            log.log(Level.SEVERE, MessageFormat.format("[HeroicRebuke] Warning deletion error: {1}", e));
         }
         return result;
     }
@@ -59,7 +60,7 @@ public abstract class HeroicRebukeDatasource {
             ps.executeUpdate();
             conn.commit();
         } catch (SQLException e) {
-            log.log(Level.SEVERE, "[HeroicRebuke] Warning acknowledge error: {0}", e);
+            log.log(Level.SEVERE, MessageFormat.format("[HeroicRebuke] Warning acknowledge error: {0}", e));
         }
     }
 
@@ -71,7 +72,7 @@ public abstract class HeroicRebukeDatasource {
             ps2.executeUpdate();
             conn.commit();
         } catch (SQLException e) {
-            log.log(Level.SEVERE, "[HeroicRebuke] Warning clear error: {0}", e);
+            log.log(Level.SEVERE, MessageFormat.format("[HeroicRebuke] Warning clear error: {0}", e));
         }
     }
 

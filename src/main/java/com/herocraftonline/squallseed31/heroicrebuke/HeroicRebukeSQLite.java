@@ -1,6 +1,7 @@
 package com.herocraftonline.squallseed31.heroicrebuke;
 
 import java.sql.*;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import org.bukkit.entity.Player;
@@ -21,7 +22,7 @@ public class HeroicRebukeSQLite extends HeroicRebukeDatasource {
         } catch (ClassNotFoundException e) {
             HeroicRebuke.log.severe("[HeroicRebuke] SQLite connector not found! Is 'sqlitejdbc-v056.jar' in /lib?");
         } catch (SQLException e) {
-            HeroicRebuke.log.log(Level.SEVERE, "[HeroicRebuke] Error connecting to SQLite Database: {0}", e.getMessage());
+            HeroicRebuke.log.log(Level.SEVERE, MessageFormat.format("[HeroicRebuke] Error connecting to SQLite Database: {0}", e.getMessage()));
         }
         return null;
     }
@@ -37,7 +38,7 @@ public class HeroicRebukeSQLite extends HeroicRebukeDatasource {
             conn.commit();
             loadWarnings();
         } catch (SQLException e) {
-            log.log(Level.SEVERE, "[{0}] Table creation error: {1}", new Object[]{plugin.name, e});
+            log.log(Level.SEVERE, MessageFormat.format("[{0}] Table creation error: {1}", new Object[]{plugin.name, e}));
         }
     }
 
@@ -60,7 +61,7 @@ public class HeroicRebukeSQLite extends HeroicRebukeDatasource {
             }
             conn.commit();
         } catch (SQLException e) {
-            log.log(Level.SEVERE, "[{0}] Warning creation error: {1}", new Object[]{plugin.name, e});
+            log.log(Level.SEVERE, MessageFormat.format("[{0}] Warning creation error: {1}", new Object[]{plugin.name, e}));
         }
         return index;
     }
@@ -83,9 +84,9 @@ public class HeroicRebukeSQLite extends HeroicRebukeDatasource {
                 i++;
             }
             conn.commit();
-            log.log(Level.INFO, "[{0}] Loaded {1} active warning{2}", new Object[]{plugin.name, i, i == 1 ? "." : "s."});
+            log.log(Level.INFO, MessageFormat.format("[{0}] Loaded {1} active warning{2}", new Object[]{plugin.name, i, i == 1 ? "." : "s."}));
         } catch (SQLException e) {
-            log.log(Level.SEVERE, "[{0}] Warning load error: {1}", new Object[]{plugin.name, e});
+            log.log(Level.SEVERE, MessageFormat.format("[{0}] Warning load error: {1}", new Object[]{plugin.name, e}));
         }
     }
 
@@ -102,7 +103,7 @@ public class HeroicRebukeSQLite extends HeroicRebukeDatasource {
             }
             conn.commit();
         } catch (SQLException e) {
-            log.log(Level.SEVERE, "[{0}] Warning get error: {1}", new Object[]{plugin.name, e});
+            log.log(Level.SEVERE, MessageFormat.format("[{0}] Warning get error: {1}", new Object[]{plugin.name, e}));
         }
         return w;
     }
@@ -129,7 +130,7 @@ public class HeroicRebukeSQLite extends HeroicRebukeDatasource {
             }
             conn.commit();
         } catch (SQLException e) {
-            log.log(Level.SEVERE, "[{0}] Warning load error: {1}", new Object[]{plugin.name, e});
+            log.log(Level.SEVERE, MessageFormat.format("[{0}] Warning load error: {1}", new Object[]{plugin.name, e}));
         }
         return output;
     }
@@ -147,7 +148,7 @@ public class HeroicRebukeSQLite extends HeroicRebukeDatasource {
             }
             conn.commit();
         } catch (SQLException e) {
-            log.log(Level.SEVERE, "[{0}] Warning count error: {1}", new Object[]{plugin.name, e});
+            log.log(Level.SEVERE, MessageFormat.format("[{0}] Warning count error: {1}", new Object[]{plugin.name, e}));
         }
         return result;
     }

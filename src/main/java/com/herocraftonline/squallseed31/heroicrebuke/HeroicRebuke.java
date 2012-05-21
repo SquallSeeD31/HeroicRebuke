@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.logging.Level;
@@ -132,12 +133,11 @@ public class HeroicRebuke extends JavaPlugin {
         if (useDB) {
             database.initDB();
         } else {
-            log.log(Level.INFO, "[{0}] No database enabled, warnings will not persist.", name);
+            log.log(Level.INFO, MessageFormat.format("[{0}] No database enabled, warnings will not persist.", name));
         }
 
         saveConfig();
-        String strEnable = "[" + name + "] " + version + " enabled.";
-        log.info(strEnable);
+        log.log(Level.INFO, MessageFormat.format("[{0}] enabled.", name));
     }
 
     @Override
@@ -391,10 +391,10 @@ public class HeroicRebuke extends JavaPlugin {
                 sender.sendMessage(messageColor + "The list command is only available when using a database.");
                 return true;
             }
-            if (args[2] == null) {
+            if ((args.length == 2 && args[1].startsWith("m")) || (args.length == 3 && (args[1].startsWith("m") || args[2].startsWith("m")))) {
                 sendWarningList(target, sender, senderName, page);
             } else {
-                sendWarningListMessages(target, sender, senderName, page);
+                //sendWarningListMessages(target, sender, senderName, page);
             }
             return true;
         }
@@ -715,7 +715,7 @@ public class HeroicRebuke extends JavaPlugin {
             SimpleDateFormat format = new SimpleDateFormat(timestampFormat);
             return format.format(timestamp);
         } catch (IllegalArgumentException e) {
-            log.severe("[HeroicRebuke] Couldn't use provided timestamp format, using default.");
+            log.log(Level.SEVERE, MessageFormat.format("[{0}] Couldn't use provided timestamp format, using default.", name));
             timestampFormat = "MM/dd/yyyy HH:mm:ss z";
             SimpleDateFormat format = new SimpleDateFormat(timestampFormat);
             return format.format(timestamp);
@@ -729,7 +729,7 @@ public class HeroicRebuke extends JavaPlugin {
         try {
             returnColor = ChatColor.valueOf(propColor);
         } catch (Exception e) {
-            log.log(Level.INFO, "[{0}] Improper color definition in config.yml, using default.", name);
+            log.log(Level.INFO, MessageFormat.format("[{0}] Improper color definition in config.yml, using default.", name));
             returnColor = ChatColor.valueOf(def);
         }
         return returnColor.toString();
@@ -737,15 +737,15 @@ public class HeroicRebuke extends JavaPlugin {
 
     public String getColorName(String colorCode) {
         try {
-            return ChatColor.getByChar(colorCode).name();
+            return ChatColor.getByChar(colorCode.charAt(1)).name();
         } catch (NumberFormatException e) {
-            log.log(Level.SEVERE, "[{0}] Unexpected error parsing color code: {1}, using default of WHITE", new Object[]{name, colorCode});
+            log.log(Level.SEVERE, MessageFormat.format("[{0}] Unexpected error parsing color code: {1}, using default of WHITE", new Object[]{name, colorCode}));
             return "WHITE";
         }
     }
 
     public boolean hasPermission(Player p, String permission) {
-        log.log(Level.SEVERE, "[{0}] FIXME: Old permissions check used!", name);
+        log.log(Level.SEVERE, MessageFormat.format("[{0}] FIXME: Old permissions check used!", name));
         return p.hasPermission(permission);
     }
 
@@ -789,9 +789,9 @@ public class HeroicRebuke extends JavaPlugin {
             try {
                 database.getConnection().close();
             } catch (SQLException e) {
-                log.log(Level.SEVERE, "[{0}] Error closing database: ", name);
+                log.log(Level.SEVERE, MessageFormat.format("[{0}] Error closing database!", name));
             }
         }
-        log.log(Level.INFO, "[{0}] {1} disabled.", new Object[]{name, version});
+        log.log(Level.INFO, MessageFormat.format("[{0}] disabled", new Object[]{name, version}));
     }
 }
