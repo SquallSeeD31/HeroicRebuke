@@ -3,7 +3,7 @@
   <groupId>com.herocraftonline.squallseed31.heroicrebuke</groupId>
   <artifactId>HeroicRebuke</artifactId>
   <name>HeroicRebuke</name>
-  <version>1.4</version>
+  <version>1.4.1</version>
   <url>http://blackcatstudios.org/bukkit-heroicrebuke</url>
   <repositories>
         <repository>

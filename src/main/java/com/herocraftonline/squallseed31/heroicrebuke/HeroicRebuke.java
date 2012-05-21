@@ -168,7 +168,7 @@ public class HeroicRebuke extends JavaPlugin {
 
         //Add Command
         if (args[0].equalsIgnoreCase("add")) {
-            if (!sender.isOp() && !hasPermission(player, "heroicrebuke.add")) {
+            if (!player.hasPermission("heroicrebuke.add")) {
                 return false;
             }
             if (args.length < 3) {
@@ -239,7 +239,7 @@ public class HeroicRebuke extends JavaPlugin {
 
         //Clear Command
         if (args[0].equalsIgnoreCase("clear")) {
-            if (!sender.isOp() && !hasPermission(player, "heroicrebuke.clear")) {
+            if (!player.hasPermission("heroicrebuke.clear")) {
                 return false;
             }
             if (args.length < 2) {
@@ -290,7 +290,7 @@ public class HeroicRebuke extends JavaPlugin {
 
         //Delete command
         if (args[0].equalsIgnoreCase("del") || args[0].equalsIgnoreCase("delete")) {
-            if (!sender.isOp() && !hasPermission(player, "heroicrebuke.delete")) {
+            if (!player.hasPermission("heroicrebuke.delete")) {
                 return false;
             }
             if (args.length < 2) {
@@ -351,13 +351,13 @@ public class HeroicRebuke extends JavaPlugin {
                 sendWarning(player, isWarned);
                 return true;
             }
-            if (!sender.isOp() && !hasPermission(player, "heroicrebuke.list")) {
+            if (!player.hasPermission("heroicrebuke.list")) {
                 return false;
             }
             String target;
             int page = 1;
             int i = 0;
-            if (sender.isOp() || hasPermission(player, "heroicrebuke.list.others")) {
+            if (player.hasPermission("heroicrebuke.list.others")) {
                 if (args.length < 2) {
                     target = senderName;
                 } else {
@@ -401,7 +401,7 @@ public class HeroicRebuke extends JavaPlugin {
 
         //Active command
         if (args[0].equalsIgnoreCase("active")) {
-            if (!sender.isOp() && !hasPermission(player, "heroicrebuke.active")) {
+            if (!player.hasPermission("heroicrebuke.active")) {
                 return false;
             }
             int page = 1;
@@ -421,7 +421,7 @@ public class HeroicRebuke extends JavaPlugin {
 
         //Info command
         if (args[0].equalsIgnoreCase("info")) {
-            if (!sender.isOp() && !hasPermission(player, "heroicrebuke.info")) {
+            if (!player.hasPermission("heroicrebuke.info")) {
                 return false;
             }
             if (args.length < 2) {
@@ -742,11 +742,6 @@ public class HeroicRebuke extends JavaPlugin {
             log.log(Level.SEVERE, MessageFormat.format("[{0}] Unexpected error parsing color code: {1}, using default of WHITE", new Object[]{name, colorCode}));
             return "WHITE";
         }
-    }
-
-    public boolean hasPermission(Player p, String permission) {
-        log.log(Level.SEVERE, MessageFormat.format("[{0}] FIXME: Old permissions check used!", name));
-        return p.hasPermission(permission);
     }
 
     @Override

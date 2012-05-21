@@ -1,6 +1,6 @@
 name: HeroicRebuke
 main: com.herocraftonline.squallseed31.heroicrebuke.HeroicRebuke
-version: 1.4
+version: 1.4.1
 author: SquallSeeD31
 commands:
   warn:
