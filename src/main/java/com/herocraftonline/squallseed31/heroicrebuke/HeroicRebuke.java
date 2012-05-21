@@ -8,6 +8,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -106,7 +107,7 @@ public class HeroicRebuke extends JavaPlugin {
         canAcknowledge = this.getConfig().getBoolean("options.canAcknowledge", true);
         consoleSender = this.getConfig().getString("options.server_name", "SERVER");
         blockMove = this.getConfig().getBoolean("options.block_move", true);
-        onlyWarnOnline = this.getConfig().getBoolean("options.only_warn_online", true);
+        onlyWarnOnline = this.getConfig().getBoolean("options.only_warn_online", false);
         maxPerPage = this.getConfig().getInt("options.lines_per_page", 5);
         mySqlDir = this.getConfig().getString("options.mysql.location", "localhost:3306/HeroicRebuke");
         mySqlUser = this.getConfig().getString("options.mysql.username", "root");
@@ -178,7 +179,7 @@ public class HeroicRebuke extends JavaPlugin {
                 sender.sendMessage(nameColor + args[1] + messageColor + " is already being warned by " + nameColor + warnings.get(args[1].toLowerCase()).getSender() + messageColor + ".");
                 return true;
             }
-            StringBuffer result = new StringBuffer();
+            StringBuilder result = new StringBuilder();
             result.append(args[2]);
             if (args.length > 3) {
                 for (int i = 3; i < args.length; i++) {
@@ -390,7 +391,11 @@ public class HeroicRebuke extends JavaPlugin {
                 sender.sendMessage(messageColor + "The list command is only available when using a database.");
                 return true;
             }
-            sendWarningList(target, sender, senderName, page);
+            if (args[2] == null) {
+                sendWarningList(target, sender, senderName, page);
+            } else {
+                sendWarningListMessages(target, sender, senderName, page);
+            }
             return true;
         }
 
@@ -555,6 +560,42 @@ public class HeroicRebuke extends JavaPlugin {
         }
     }
 
+    public void sendWarningListMessages(String target, CommandSender sender, String senderName, int page) {
+        ArrayList<String> curList = lists.get(target.toLowerCase());
+        if (curList == null) {
+            curList = database.listWarnings(target);
+            lists.put(target.toLowerCase(), curList);
+        }
+        if (curList.isEmpty()) {
+            sender.sendMessage(nameColor + target + messageColor + " has received no warnings.");
+            return;
+        }
+        if (page < 1) {
+            page = 1;
+        }
+        int numPages = (int) Math.ceil(curList.size() / maxPerPage);
+        if (curList.size() % maxPerPage > 0) {
+            numPages++;
+        }
+        if (page > numPages) {
+            sender.sendMessage(messageColor + "Bad page number, please issue " + infoColor + "/warn list" + messageColor + " command again without a page number to get acceptable range.");
+            return;
+        }
+        int startOfPage = (page - 1) * maxPerPage;
+        int endOfPage = maxPerPage + (page - 1) * maxPerPage - 1;
+        if (endOfPage >= curList.size()) {
+            endOfPage = curList.size() - 1;
+        }
+        sender.sendMessage(messageColor + "Warnings Matching [" + nameColor + target + messageColor + "] (Page " + infoColor + page + messageColor + "/" + infoColor + numPages + messageColor + ") - Type " + infoColor + "/warn info #" + messageColor + " for details of a given warning.");
+        for (int i = startOfPage; i <= endOfPage; i++) {
+            String msg = curList.get(i);
+            //curList.
+            if (msg != null) {
+                sender.sendMessage(msg);
+            }
+        }
+    }
+
     public void sendActiveList(CommandSender sender, String senderName, int page) {
         ArrayList<String> curList = lists.get(senderName.toLowerCase());
         if (curList == null) {
@@ -638,7 +679,7 @@ public class HeroicRebuke extends JavaPlugin {
             return;
         }
         p.sendMessage(messageColor + "You have acknowledged your warning.");
-        String message = nameColor + p.getName() + messageColor + " acknowledged your warning."; // TODO: broadcast to all with hr.notify perm
+        String message = nameColor + p.getName() + messageColor + " acknowledged your warning.";
         if (!w.getSender().equals(consoleSender)) {
             try {
                 Player sender = getServer().getPlayer(w.getSender());
@@ -648,6 +689,15 @@ public class HeroicRebuke extends JavaPlugin {
         } else {
             System.out.println(message.replaceAll("(?i)\u00A7[0-F]", ""));
         }
+
+        // notify every online player with heroicrebuke.notify except the sender who was just notified
+        for (Player playertn : Bukkit.getServer().getOnlinePlayers()) {
+            if (playertn.hasPermission("heroicrebuke.notify") && !playertn.getName().equalsIgnoreCase(w.getSender())) {
+                playertn.sendMessage(p.getDisplayName() + " acknowledged a warning from " + w.getSender() + " for " + w.getMessage());
+            }
+        }
+
+
         warnings.remove(p.getName().toLowerCase());
         HeroicRebukeListener.rootLocations.remove(p);
         if (useDB) {
@@ -687,10 +737,7 @@ public class HeroicRebuke extends JavaPlugin {
 
     public String getColorName(String colorCode) {
         try {
-            colorCode = colorCode.replace("\u00A7", "0x");
-            Byte b = Byte.decode(colorCode);
-            return "WHITE"; // TODO FIXME
-            //return ChatColor.getByCode(Integer.valueOf(b.intValue())).name();
+            return ChatColor.getByChar(colorCode).name();
         } catch (NumberFormatException e) {
             log.log(Level.SEVERE, "[{0}] Unexpected error parsing color code: {1}, using default of WHITE", new Object[]{name, colorCode});
             return "WHITE";
@@ -743,10 +790,8 @@ public class HeroicRebuke extends JavaPlugin {
                 database.getConnection().close();
             } catch (SQLException e) {
                 log.log(Level.SEVERE, "[{0}] Error closing database: ", name);
-                e.printStackTrace();
             }
         }
-        String strDisable = "[" + name + "] " + version + " disabled.";
-        log.info(strDisable);
+        log.log(Level.INFO, "[{0}] {1} disabled.", new Object[]{name, version});
     }
 }

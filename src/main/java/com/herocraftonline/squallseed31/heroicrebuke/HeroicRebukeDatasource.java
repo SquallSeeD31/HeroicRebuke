@@ -5,80 +5,81 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public abstract class HeroicRebukeDatasource
-{
-  protected static Connection connection;
-  protected static HeroicRebuke plugin;
-  protected static final Logger log = Logger.getLogger("Minecraft");
-  
-  public synchronized Connection getConnection() {
-	    if (connection == null) {
-	      connection = createConnection();
-	      if (connection == null)
-	    	  HeroicRebuke.useDB = false;
-	    }
-	    return connection;
-	  }
+public abstract class HeroicRebukeDatasource {
 
-	  protected abstract Connection createConnection();
+    protected static Connection connection;
+    protected static HeroicRebuke plugin;
+    protected static final Logger log = Logger.getLogger("Minecraft");
 
-	  public abstract void initDB();
+    public synchronized Connection getConnection() {
+        if (connection == null) {
+            connection = createConnection();
+            if (connection == null) {
+                HeroicRebuke.useDB = false;
+            }
+        }
+        return connection;
+    }
 
-	  public abstract int newWarning(Warning w);
+    protected abstract Connection createConnection();
 
-	  public String delWarning(Integer id) {
-		String result = null;
-		try {
-		    Connection conn = getConnection();
-		    conn.setAutoCommit(false);
-		    PreparedStatement ps1 = conn.prepareStatement("SELECT `to` FROM `warnings` WHERE `id` = ?");
-		    ps1.setInt(1, id);
-		    ResultSet rs = ps1.executeQuery();
-		    if (rs.next()) {
-			    PreparedStatement ps2 = conn.prepareStatement("DELETE FROM `warnings` WHERE `id` = ?");
-			    ps2.setInt(1, id);
-			    ps2.executeUpdate();
-			    result = rs.getString("to");
-		    }
-	        conn.commit();
-	    } catch (SQLException e) {
-	      log.severe("[HeroicRebuke] Warning deletion error: " + e);
-	      e.printStackTrace();
-	    }
-	    return result;
-	  }
-	  
-	  public void ackWarning(String to) {
-		  try {
-			  Connection conn = getConnection();
-			  PreparedStatement ps = conn.prepareStatement("UPDATE `warnings` SET `ack` = '1', `ack_time` = CURRENT_TIMESTAMP WHERE `ack` = '0' AND `to` LIKE ?");
-			  ps.setString(1, to);
-			  ps.executeUpdate();
-		      conn.commit();
-		  } catch (SQLException e) {
-		      log.severe("[HeroicRebuke] Warning acknowledge error: " + e);
-		  }
-	  }
-	  
-	  public void clearWarning(String to) {
-		  try {
-			  Connection conn = getConnection();
-			  PreparedStatement ps2 = conn.prepareStatement("DELETE FROM `warnings` WHERE `ack` = '0' AND `to` LIKE ?");
-			  ps2.setString(1, to);
-			  ps2.executeUpdate();
-		      conn.commit();
-		  } catch (SQLException e) {
-		      log.severe("[HeroicRebuke] Warning clear error: " + e);
-		  }
-	  }
-	  
-	  public abstract int countWarnings(String player);
-	  
-	  public abstract void loadWarnings();
-	  
-	  public abstract Warning getWarning(int index);
-	  
-	  public abstract ArrayList<String> listWarnings(String to);
+    public abstract void initDB();
+
+    public abstract int newWarning(Warning w);
+
+    public String delWarning(Integer id) {
+        String result = null;
+        try {
+            Connection conn = getConnection();
+            conn.setAutoCommit(false);
+            PreparedStatement ps1 = conn.prepareStatement("SELECT `to` FROM `warnings` WHERE `id` = ?");
+            ps1.setInt(1, id);
+            ResultSet rs = ps1.executeQuery();
+            if (rs.next()) {
+                PreparedStatement ps2 = conn.prepareStatement("DELETE FROM `warnings` WHERE `id` = ?");
+                ps2.setInt(1, id);
+                ps2.executeUpdate();
+                result = rs.getString("to");
+            }
+            conn.commit();
+        } catch (SQLException e) {
+            log.log(Level.SEVERE, "[HeroicRebuke] Warning deletion error: {0}", e);
+        }
+        return result;
+    }
+
+    public void ackWarning(String to) {
+        try {
+            Connection conn = getConnection();
+            PreparedStatement ps = conn.prepareStatement("UPDATE `warnings` SET `ack` = '1', `ack_time` = CURRENT_TIMESTAMP WHERE `ack` = '0' AND `to` LIKE ?");
+            ps.setString(1, to);
+            ps.executeUpdate();
+            conn.commit();
+        } catch (SQLException e) {
+            log.log(Level.SEVERE, "[HeroicRebuke] Warning acknowledge error: {0}", e);
+        }
+    }
+
+    public void clearWarning(String to) {
+        try {
+            Connection conn = getConnection();
+            PreparedStatement ps2 = conn.prepareStatement("DELETE FROM `warnings` WHERE `ack` = '0' AND `to` LIKE ?");
+            ps2.setString(1, to);
+            ps2.executeUpdate();
+            conn.commit();
+        } catch (SQLException e) {
+            log.log(Level.SEVERE, "[HeroicRebuke] Warning clear error: {0}", e);
+        }
+    }
+
+    public abstract int countWarnings(String player);
+
+    public abstract void loadWarnings();
+
+    public abstract Warning getWarning(int index);
+
+    public abstract ArrayList<String> listWarnings(String to);
 }
